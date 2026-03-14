@@ -59,7 +59,9 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
         for k in range(iters):
             solve(lhs(F_rho)==rhs(F_rho), rho_k)
 
-            p_k = rho_k**gamma
+            #p_k = rho_k**gamma
+            c = 1.0
+            p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
 
             F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx \
                 - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx \
@@ -143,7 +145,7 @@ for i,(t,rho_val) in enumerate(res):
     axes[i].set_title(f"t={t:.2f}")
 
 plt.tight_layout()
-plt.savefig("Плотность.png")
+plt.savefig("Плотность_новое_давление.png")
 
 
 # Эволюция плотности
@@ -158,7 +160,7 @@ plt.xlabel("t")
 plt.ylabel("Плотность")
 plt.legend()
 plt.grid()
-plt.savefig("Эволюция_плотности.png")
+plt.savefig("Эволюция_плотности_новое_давление.png")
 
 
 # Эволюция по tau
@@ -168,7 +170,7 @@ plt.figure(figsize=(8,5))
 time_evol(50, taus)
 plt.grid()
 plt.legend()
-plt.savefig("Эволюция_времени.png")
+plt.savefig("Эволюция_времени_новое_давление.png")
 
 
 # Куранта
@@ -193,7 +195,7 @@ plt.title("Эволюция числа Куранта")
 plt.legend()
 plt.grid()
 
-plt.savefig("Эволюция_Куранта.png")
+plt.savefig("Эволюция_Куранта_новое_давление.png")
 
 end_time = time.time()
 

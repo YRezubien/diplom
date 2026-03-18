@@ -19,10 +19,7 @@ for tau in taus:
     V_rho = FunctionSpace(mesh, "Lagrange", 1)
     V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    initial_density = Expression(
-        "1.0 + 2.0 * exp(-20.0 * (x[0]*x[0] + x[1]*x[1]))",
-        degree=2
-    )
+    initial_density = Expression("1.0 + 2.0 * exp(-20.0 * (x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0.0, 0.0)), V_u)
@@ -49,7 +46,6 @@ for tau in taus:
     u_k.assign(u_n)
 
     errors = []
-
     for k in range(iters):
 
         rho_prev.assign(rho_k)
@@ -63,12 +59,9 @@ for tau in taus:
         c = 1.0
         p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
 
-        F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx \
-            - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx \
-            - p_k*div(psi)*dx
+        F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx - p_k*div(psi)*dx
 
-        tau_visc = mu * (grad(u_trial) + grad(u_trial).T) \
-                    - (2.0/3.0) * mu * div(u_trial) * I
+        tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
         F_u += inner(tau_visc, grad(psi)) * dx
         solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
 

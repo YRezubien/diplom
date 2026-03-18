@@ -21,10 +21,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
     V_rho = FunctionSpace(mesh, "Lagrange", 1)
     V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    initial_density = Expression(
-        "1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))",
-        degree=2
-    )
+    initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0,0)), V_u)
@@ -35,8 +32,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
     rho_trial, phi = TrialFunction(V_rho), TestFunction(V_rho)
     u_trial, psi = TrialFunction(V_u), TestFunction(V_u)
 
-    F_rho = (rho_trial-rho_n)/tau*phi*dx \
-            - rho_trial*dot(u_k, grad(phi))*dx
+    F_rho = (rho_trial-rho_n)/tau*phi*dx - rho_trial*dot(u_k, grad(phi))*dx
 
     bc_u = DirichletBC(V_u, Constant((0,0)), "on_boundary")
 
@@ -61,9 +57,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
 
             p_k = rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx \
-                - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx \
-                - p_k*div(psi)*dx
+            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx - p_k*div(psi)*dx
 
             solve(lhs(F_u)==rhs(F_u), u_k, bc_u)
 
@@ -118,7 +112,6 @@ def time_evol(M, taus):
             if tt not in data["profiles"]:
                 continue
             rho = data["profiles"][tt]
-
             rho_vals = [rho(x, 0) for x in x_line]
 
             plt.plot(x_line, rho_vals, linestyle=styles[tau])
@@ -128,14 +121,12 @@ def courant(M, tau):
     data = run_solver(M, tau, compute_courant=True)
     return data["time"], data["courant"]
 
-
 # Плотность
 print("Начинаю плотность:")
 
 res, time_hist, rho_center, rho_max, rho_min = density(200,0.005)
 
 fig,axes=plt.subplots(1,len(res),figsize=(20,5))
-
 for i,(t,rho_val) in enumerate(res):
     plt.sca(axes[i])
     p=plot(rho_val,mode="contourf")
@@ -145,9 +136,7 @@ for i,(t,rho_val) in enumerate(res):
 plt.tight_layout()
 plt.savefig("Плотность.png")
 
-
 # Эволюция плотности
-
 plt.figure(figsize=(8,5))
 
 plt.plot(time_hist, rho_center, label="Плотность в центре")
@@ -160,7 +149,6 @@ plt.legend()
 plt.grid()
 plt.savefig("Эволюция_плотности.png")
 
-
 # Эволюция по tau
 print("Начинаю эволюцию времени:")
 
@@ -170,7 +158,6 @@ plt.grid()
 plt.legend()
 plt.savefig("Эволюция_времени.png")
 
-
 # Куранта
 print("Начинаю Куранта:")
 
@@ -179,7 +166,6 @@ for M in Ms:
     print("Running M =", M)
     t_hist, C_hist = courant(M,0.01)
     results[M] = (t_hist, C_hist)
-
 
 plt.figure(figsize=(8,5))
 
@@ -197,4 +183,4 @@ plt.savefig("Эволюция_Куранта.png")
 
 end_time = time.time()
 
-print("Время выполнения:", end_time - start_time, "с.")
+print("Время выполнения:", end_time - start_time)

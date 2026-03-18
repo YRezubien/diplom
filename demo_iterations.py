@@ -2,11 +2,9 @@ from dolfin import *
 import matplotlib.pyplot as plt
 import numpy as np
 
-# параметры
 M = 50
 tau = 0.005
 T = 3
-
 a = 1.0
 gamma = 1.4
 
@@ -24,10 +22,7 @@ mesh = RectangleMesh(Point(-5,-5), Point(5,5), M, M)
 V_rho = FunctionSpace(mesh,"Lagrange",1)
 V_u = VectorFunctionSpace(mesh,"Lagrange",1)
 
-initial_density = Expression(
-    "1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))",
-    degree=2
-)
+initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
 bc_u = DirichletBC(V_u, Constant((0,0)), "on_boundary")
 
@@ -42,7 +37,6 @@ x_vals = np.linspace(0,5,400)
 plt.figure(figsize=(8,6))
 
 for K in K_values:
-
     print(f"Simulation for K = {K}")
 
     rho_n = project(initial_density, V_rho)
@@ -54,7 +48,6 @@ for K in K_values:
     saved = {}
 
     t = 0.0
-
     while t < T:
 
         t += tau
@@ -63,17 +56,13 @@ for K in K_values:
         u_k.assign(u_n)
 
         for k in range(K):
-
-            F_rho = (rho_trial-rho_n)/tau*phi*dx \
-                  - rho_trial*dot(u_k,grad(phi))*dx
+            F_rho = (rho_trial-rho_n)/tau*phi*dx - rho_trial*dot(u_k,grad(phi))*dx
 
             solve(lhs(F_rho)==rhs(F_rho), rho_k)
 
             p_k = a*rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial,psi)-rho_n*dot(u_n,psi))/tau*dx \
-                - inner(rho_k*outer(u_trial,u_k),grad(psi))*dx \
-                - p_k*div(psi)*dx
+            F_u = (rho_k*dot(u_trial,psi)-rho_n*dot(u_n,psi))/tau*dx - inner(rho_k*outer(u_trial,u_k),grad(psi))*dx - p_k*div(psi)*dx
 
             solve(lhs(F_u)==rhs(F_u), u_k, bc_u)
 

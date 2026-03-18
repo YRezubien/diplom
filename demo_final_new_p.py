@@ -21,10 +21,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
     V_rho = FunctionSpace(mesh, "Lagrange", 1)
     V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    initial_density = Expression(
-        "1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))",
-        degree=2
-    )
+    initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0,0)), V_u)

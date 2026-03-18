@@ -10,16 +10,12 @@ a, gamma = 1.0, 1.4
 times = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 
 def run_simulation(M):
-
     mesh = RectangleMesh(Point(-5,-5), Point(5,5), M, M)
 
     V_rho = FunctionSpace(mesh, "Lagrange", 1)
     V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    initial_density = Expression(
-        "1.0 + 2.0*exp(-20.0*(x[0]*x[0] + x[1]*x[1]))",
-        degree=2
-    )
+    initial_density = Expression("1.0 + 2.0*exp(-20.0*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0.0,0.0)), V_u)
@@ -30,18 +26,15 @@ def run_simulation(M):
     rho_trial, phi = TrialFunction(V_rho), TestFunction(V_rho)
     u_trial, psi = TrialFunction(V_u), TestFunction(V_u)
 
-    F_rho = (rho_trial-rho_n)/tau*phi*dx \
-            - rho_trial*dot(u_k, grad(phi))*dx
+    F_rho = (rho_trial-rho_n)/tau*phi*dx - rho_trial*dot(u_k, grad(phi))*dx
 
     bc_u = DirichletBC(V_u, Constant((0,0)), "on_boundary")
 
     t = 0
-
     time_hist = []
     courant_hist = []
 
     while t < T:
-
         t += tau
 
         rho_k.assign(rho_n)
@@ -53,9 +46,7 @@ def run_simulation(M):
 
             p_k = a * rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx \
-                - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx \
-                - p_k*div(psi)*dx
+            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx - p_k*div(psi)*dx
 
             solve(lhs(F_u)==rhs(F_u), u_k, bc_u)
 
@@ -77,9 +68,6 @@ def run_simulation(M):
 
     return time_hist, courant_hist
 
-
-# ---- запуск для разных сеток ----
-
 Ms = [50, 100, 200]
 
 results = {}
@@ -88,9 +76,6 @@ for M in Ms:
     print("Running M =", M)
     t_hist, C_hist = run_simulation(M)
     results[M] = (t_hist, C_hist)
-
-
-# ---- график Courant ----
 
 plt.figure(figsize=(8,5))
 

@@ -36,8 +36,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
     dim = mesh.geometry().dim()
     I = Identity(dim)
 
-    F_rho = (rho_trial - rho_n)/tau*phi*dx \
-            - rho_trial*dot(u_k, grad(phi))*dx
+    F_rho = (rho_trial - rho_n)/tau*phi*dx - rho_trial*dot(u_k, grad(phi))*dx
 
     bc_u = DirichletBC(V_u, Constant((0, 0)), "on_boundary")
 
@@ -54,7 +53,6 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
 
     while t < T:
         t += tau
-
         rho_k.assign(rho_n)
         u_k.assign(u_n)
 
@@ -65,12 +63,8 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
             c = 1.0
             p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx \
-                - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx \
-                - p_k*div(psi)*dx
-
-            tau_visc = mu * (grad(u_trial) + grad(u_trial).T) \
-                       - (2.0/3.0) * mu * div(u_trial) * I
+            F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx - p_k*div(psi)*dx
+            tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
             F_u += inner(tau_visc, grad(psi)) * dx
 
             solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
@@ -107,12 +101,10 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
         "courant": courant_hist
     }
 
-
 def density(M, tau):
     data = run_solver(M, tau, save_times=times)
     res = [(t, data["profiles"][t]) for t in times if t in data["profiles"]]
     return res, data["time"], data["rho_center"], data["rho_max"], data["rho_min"]
-
 
 def time_evol(M, taus):
     x_line = np.linspace(0, 5, 25)
@@ -125,11 +117,9 @@ def time_evol(M, taus):
             rho_vals = [rho(x, 0) for x in x_line]
             plt.plot(x_line, rho_vals, linestyle=styles[tau])
 
-
 def courant(M, tau):
     data = run_solver(M, tau, compute_courant=True)
     return data["time"], data["courant"]
-
 
 print("Начинаю плотность (Навье-Стокса):")
 res, time_hist, rho_center, rho_max, rho_min = density(200, 0.005)
@@ -179,4 +169,4 @@ plt.grid()
 plt.savefig("Эволюция_Куранта_НавьеСтокса.png")
 
 end_time = time.time()
-print("Время выполнения:", end_time - start_time, "с.")
+print("Время выполнения: ", end_time - start_time)

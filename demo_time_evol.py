@@ -25,10 +25,7 @@ x_line = np.linspace(0,5,25)
 plt.figure(figsize=(8,5))
 
 for tau in taus:
-
-    initial_density = Expression(
-        "1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))",
-        degree=2)
+    initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0,0)), V_u)
@@ -49,21 +46,17 @@ for tau in taus:
     t = 0
 
     while t < T:
-
         t += tau
 
         rho_k.assign(rho_n)
         u_k.assign(u_n)
 
         for k in range(iters):
-
             solve(lhs(F_rho)==rhs(F_rho), rho_k)
 
             p_k = a*rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx \
-                  - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx \
-                  - p_k*div(psi)*dx
+            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx - p_k*div(psi)*dx
 
             solve(lhs(F_u)==rhs(F_u), u_k, bc_u)
 
@@ -75,7 +68,6 @@ for tau in taus:
                 saved_profiles[tt] = rho_n.copy(deepcopy=True)
 
     for tt in times_to_plot:
-
         rho_vals = [saved_profiles[tt](x,0) for x in x_line]
 
         plt.plot(
@@ -86,10 +78,9 @@ for tau in taus:
 
 plt.grid()
 plt.legend()
-
 plt.savefig("figure4.png")
 plt.show()
 
 end_time = time.time()
 
-print("Время выполнения:", end_time - start_time, "с.")
+print("Время выполнения:", end_time - start_time)

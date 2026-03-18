@@ -103,8 +103,6 @@ while t < T:
     # rho_max.append(values.max())
 
 
-# ===== графики плотности =====
-
 fig, axes = plt.subplots(1, len(res), figsize=(20, 5))
 
 for i, (t, rho_val) in enumerate(res):

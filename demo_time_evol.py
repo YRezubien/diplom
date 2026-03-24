@@ -13,14 +13,14 @@ a, gamma = 1.0, 1.4
 taus = [0.01, 0.005, 0.0025]
 styles = {0.01: ":", 0.005: "--", 0.0025: "-"}
 
-times_to_plot = [1,2,3]
+times_to_plot = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 
 mesh = RectangleMesh(Point(-5,-5), Point(5,5), M, M)
 
 V_rho = FunctionSpace(mesh, "Lagrange", 1)
 V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-x_line = np.linspace(0,5,25)
+x_line = np.linspace(0, 5, 25)
 
 plt.figure(figsize=(8,5))
 
@@ -35,16 +35,18 @@ for tau in taus:
 
     rho_trial, phi = TrialFunction(V_rho), TestFunction(V_rho)
     u_trial, psi = TrialFunction(V_u), TestFunction(V_u)
+    mu = Constant(0.01)
+    dim = mesh.geometry().dim()
+    I = Identity(dim)
 
-    F_rho = (rho_trial - rho_n)/tau * phi*dx \
-            - rho_trial*dot(u_k, grad(phi))*dx
+    F_rho = (rho_trial - rho_n)/tau * phi*dx - rho_trial*dot(u_k, grad(phi))*dx
 
     bc_u = DirichletBC(V_u, Constant((0,0)), "on_boundary")
 
     saved_profiles = {}
+    saved_profiles[0.0] = rho_n.copy(deepcopy=True)
 
     t = 0
-
     while t < T:
         t += tau
 
@@ -54,9 +56,12 @@ for tau in taus:
         for k in range(iters):
             solve(lhs(F_rho)==rhs(F_rho), rho_k)
 
-            p_k = a*rho_k**gamma
+            c = 1.0
+            p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial,psi) - rho_n*dot(u_n,psi))/tau*dx - inner(rho_k*outer(u_trial,u_k), grad(psi))*dx - p_k*div(psi)*dx
+            F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx - p_k*div(psi)*dx
+            tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
+            F_u += inner(tau_visc, grad(psi)) * dx
 
             solve(lhs(F_u)==rhs(F_u), u_k, bc_u)
 
@@ -68,13 +73,9 @@ for tau in taus:
                 saved_profiles[tt] = rho_n.copy(deepcopy=True)
 
     for tt in times_to_plot:
-        rho_vals = [saved_profiles[tt](x,0) for x in x_line]
+        rho_vals = [saved_profiles[tt](x, 0) for x in x_line]
 
-        plt.plot(
-            x_line,
-            rho_vals,
-            linestyle=styles[tau]
-        )
+        plt.plot(x_line, rho_vals, linestyle=styles[tau])
 
 plt.grid()
 plt.legend()

@@ -3,10 +3,10 @@ import numpy as np
 
 set_log_level(LogLevel.ERROR)
 
-M = 200
+M = 50
 a = 1.0
 gamma = 1.4
-iters = 3
+iters = 5
 taus = [0.01, 0.005, 0.0025]
 
 # Словарь для хранения результатов: {tau: [ошибки по итерациям]}
@@ -101,7 +101,7 @@ for tau in taus:
     results[tau] = tau_errors
 
 # --- Вывод таблицы ---
-print("Сходимость при первом шаге в трех итерациях")
+print(f"Сходимость при первом шаге в {iter} итерациях")
 print("-" * 55)
 header = f"{'Итер':<10}" + "".join([f"tau = {t:<12}" for t in taus])
 print(header)

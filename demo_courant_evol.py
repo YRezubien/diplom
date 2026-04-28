@@ -5,11 +5,11 @@ import time
 
 start_time = time.time()
 M = 50
-tau = 0.01
+tau = 0.005
 T = 5
 iters = 2
 a, gamma = 1.0, 1.4
-
+ 
 times = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 res = []
 
@@ -33,9 +33,11 @@ u_k = Function(V_u)
 rho_trial, phi = TrialFunction(V_rho), TestFunction(V_rho)
 u_trial, psi = TrialFunction(V_u), TestFunction(V_u)
 
-F_rho = (rho_trial - rho_n)/tau * phi * dx \
-        - rho_trial * dot(u_k, grad(phi)) * dx
+mu = Constant(0.01)
+dim = mesh.geometry().dim()
+I = Identity(dim)
 
+F_rho = (rho_trial - rho_n)/tau * phi*dx - rho_trial*dot(u_k, grad(phi))*dx
 bc_u = DirichletBC(V_u, Constant((0, 0)), "on_boundary")
 
 time_hist = []
@@ -55,13 +57,24 @@ while t < T:
 
     for k in range(iters):
 
-        solve(lhs(F_rho) == rhs(F_rho), rho_k)
+        # solve(lhs(F_rho) == rhs(F_rho), rho_k)
 
-        p_k = a * rho_k**gamma
+        # p_k = a * rho_k**gamma
 
-        F_u = (rho_k * dot(u_trial, psi) - rho_n * dot(u_n, psi))/tau * dx \
-              - inner(rho_k * outer(u_trial, u_k), grad(psi)) * dx \
-              - p_k * div(psi) * dx
+        # F_u = (rho_k * dot(u_trial, psi) - rho_n * dot(u_n, psi))/tau * dx \
+        #       - inner(rho_k * outer(u_trial, u_k), grad(psi)) * dx \
+        #       - p_k * div(psi) * dx
+
+        # solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
+        c = 1.0
+        p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
+
+        F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx \
+                - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx \
+                - p_k*div(psi)*dx
+                
+        tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
+        F_u += inner(tau_visc, grad(psi)) * dx
 
         solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
 

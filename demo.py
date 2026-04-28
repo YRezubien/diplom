@@ -70,7 +70,7 @@ for i, (t, rho_val) in enumerate(res):
     axes[i].set_title(f"t = {t:.2f}")
 
 plt.tight_layout()
-plt.savefig('fig.png')
+plt.savefig('fig_ideal.png')
 plt.show()
 
 plt.figure(figsize=(8,5))

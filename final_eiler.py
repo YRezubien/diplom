@@ -63,10 +63,7 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
             c = 1.0
             p_k = c**2 * rho_k + (gamma - 1)*rho_k**gamma
 
-            F_u = (rho_k*dot(u_trial, psi) - rho_n*dot(u_n, psi))/tau*dx - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx - p_k*div(psi)*dx
-            tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
-            F_u += inner(tau_visc, grad(psi)) * dx
-
+            F_u = (rho_k * dot(u_trial, psi) - rho_n * dot(u_n, psi))/tau * dx - inner(rho_k * outer(u_trial, u_k), grad(psi)) * dx - p_k * div(psi) * dx
             solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
 
         rho_n.assign(rho_k)
@@ -101,54 +98,54 @@ def run_solver(M, tau, save_times=None, compute_courant=False):
         "courant": courant_hist
     }
 
-# def density(M, tau):
-#     data = run_solver(M, tau, save_times=times)
-#     res = [(t, data["profiles"][t]) for t in times if t in data["profiles"]]
-#     return res, data["time"], data["rho_center"], data["rho_max"], data["rho_min"]
+def density(M, tau):
+    data = run_solver(M, tau, save_times=times)
+    res = [(t, data["profiles"][t]) for t in times if t in data["profiles"]]
+    return res, data["time"], data["rho_center"], data["rho_max"], data["rho_min"]
 
-# def time_evol(M, taus):
-#     x_line = np.linspace(0, 5, 25)
-#     for tau in taus:
-#         data = run_solver(M, tau, save_times=times)
-#         for tt in times:
-#             if tt not in data["profiles"]:
-#                 continue
-#             rho = data["profiles"][tt]
-#             rho_vals = [rho(x, 0) for x in x_line]
-#             plt.plot(x_line, rho_vals, linestyle=styles[tau])
+def time_evol(M, taus):
+    x_line = np.linspace(0, 5, 25)
+    for tau in taus:
+        data = run_solver(M, tau, save_times=times)
+        for tt in times:
+            if tt not in data["profiles"]:
+                continue
+            rho = data["profiles"][tt]
+            rho_vals = [rho(x, 0) for x in x_line]
+            plt.plot(x_line, rho_vals, linestyle=styles[tau])
 
 def courant(M, tau):
     data = run_solver(M, tau, compute_courant=True)
     return data["time"], data["courant"]
 
-# print("Начинаю плотность (Навье-Стокса):")
-# res, time_hist, rho_center, rho_max, rho_min = density(200, 0.005)
+print("Начинаю плотность:")
+res, time_hist, rho_center, rho_max, rho_min = density(200, 0.005)
 
-# fig, axes = plt.subplots(1, len(res), figsize=(20, 5))
-# for i, (t, rho_val) in enumerate(res):
-#     plt.sca(axes[i])
-#     p = plot(rho_val, mode="contourf")
-#     plt.colorbar(p, ax=axes[i])
-#     axes[i].set_title(f"t={t:.2f}")
-# plt.tight_layout()
-# plt.savefig("Плотность_НавьеСтокса.png")
+fig, axes = plt.subplots(1, len(res), figsize=(20, 5))
+for i, (t, rho_val) in enumerate(res):
+    plt.sca(axes[i])
+    p = plot(rho_val, mode="contourf")
+    plt.colorbar(p, ax=axes[i])
+    axes[i].set_title(f"t={t:.2f}")
+plt.tight_layout()
+plt.savefig("Плотность_Эйлера.png")
 
-# plt.figure(figsize=(8, 5))
-# plt.plot(time_hist, rho_center, label="Плотность в центре")
-# plt.plot(time_hist, rho_min, label="Мин. плотность")
-# plt.plot(time_hist, rho_max, label="Макс. плотность")
-# plt.xlabel("t")
-# plt.ylabel("Плотность")
-# plt.legend()
-# plt.grid()
-# plt.savefig("Эволюция_плотности_НавьеСтокса.png")
+plt.figure(figsize=(8, 5))
+plt.plot(time_hist, rho_center, label="Плотность в центре")
+plt.plot(time_hist, rho_min, label="Мин. плотность")
+plt.plot(time_hist, rho_max, label="Макс. плотность")
+plt.xlabel("t")
+plt.ylabel("Плотность")
+plt.legend()
+plt.grid()
+plt.savefig("Эволюция_плотности_Эйлера.png")
 
-# print("Начинаю эволюцию по tau:")
-# plt.figure(figsize=(8, 5))
-# time_evol(50, taus)
-# plt.grid()
-# plt.legend()
-# plt.savefig("Эволюция_времени_НавьеСтокса.png")
+print("Начинаю эволюцию по tau:")
+plt.figure(figsize=(8, 5))
+time_evol(50, taus)
+plt.grid()
+plt.legend()
+plt.savefig("Эволюция_времени_Эйлера.png")
 
 print("Начинаю Куранта:")
 results = {}
@@ -166,7 +163,7 @@ plt.ylabel("C")
 plt.title("Эволюция числа Куранта")
 plt.legend()
 plt.grid()
-plt.savefig("Эволюция_Куранта_НавьеСтокса.png")
+plt.savefig("Эволюция_Куранта_Эйлера.png")
 
 end_time = time.time()
 print("Время выполнения: ", end_time - start_time)

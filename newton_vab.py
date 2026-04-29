@@ -156,34 +156,31 @@
 from dolfin import *
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
-# Параметры задачи
+set_log_level(LogLevel.ERROR)
+
 tau = 0.005
-M = 300
+M = 200
 gamma = 1.4
 c = 1.0
-tol = 1e-20  # Общая точность для обоих методов
+tol = 1e-20
 max_iter = 10
 
-# Сетка
 mesh = RectangleMesh(Point(-5, -5), Point(5, 5), M, M)
 V_rho = FunctionSpace(mesh, "Lagrange", 1)
 V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 
-# Смешанное пространство для Ньютона
 P1 = FiniteElement("Lagrange", mesh.ufl_cell(), 1)
 element = MixedElement([P1, P1, P1])
 V_mixed = FunctionSpace(mesh, element)
 
-# Начальные условия (одинаковые для обоих)
 initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 rho_n = project(initial_density, V_rho)
 u_n = Function(V_u)
 
-# --- МЕТОД НЬЮТОНА ---
 def solve_newton(rho_n, u_n, tau, tol):
     w = Function(V_mixed)
-    # Начальное приближение из предыдущего слоя
     assigner = FunctionAssigner(V_mixed, [V_rho, V_u.sub(0), V_u.sub(1)])
     assigner.assign(w, [rho_n, u_n.sub(0), u_n.sub(1)])
     
@@ -208,15 +205,12 @@ def solve_newton(rho_n, u_n, tau, tol):
         delta_w = Function(V_mixed)
         solve(A, delta_w.vector(), b)
         w.vector().axpy(1.0, delta_w.vector())
-        
-        # Считаем относительную ошибку
         rel_err = delta_w.vector().norm("l2") / (w.vector().norm("l2") + 1e-12)
         errors.append(rel_err)
         
         if rel_err < tol: break
     return errors
 
-# --- МЕТОД РАСЩЕПЛЕНИЯ (ВАБИЩЕВИЧ) ---
 def solve_vabishchevich(rho_n, u_n, tau, tol):
     rho_k = Function(V_rho)
     rho_k.assign(rho_n)
@@ -225,8 +219,7 @@ def solve_vabishchevich(rho_n, u_n, tau, tol):
     
     errors = []
     bc_u = DirichletBC(V_u, Constant((0, 0)), "on_boundary")
-    
-    # Определяем пробные функции ОДИН РАЗ вне цикла
+
     r_trial = TrialFunction(V_rho)
     u_trial = TrialFunction(V_u)
     phi = TestFunction(V_rho)
@@ -235,45 +228,43 @@ def solve_vabishchevich(rho_n, u_n, tau, tol):
     for k in range(max_iter):
         rho_old_vec = rho_k.vector().copy()
         
-        # 1. Шаг по Плотности
-        # Уравнение: (r - rho_n)/tau * phi * dx - r * dot(u_k, grad(phi)) * dx = 0
-        # Здесь r_trial - это искомое (v_1), phi - тест (v_0)
         a_r = (r_trial / tau) * phi * dx - r_trial * dot(u_k, grad(phi)) * dx
         L_r = (rho_n / tau) * phi * dx
         
         solve(a_r == L_r, rho_k)
         
-        # 2. Шаг по Скорости
         p_k = c**2 * rho_k + (gamma - 1) * rho_k**gamma
-        # Линеаризуем конвекцию, используя u_k из предыдущей итерации
         F_u = (rho_k * dot(u_trial, psi) - rho_n * dot(u_n, psi)) / tau * dx \
               - inner(rho_k * outer(u_trial, u_k), grad(psi)) * dx \
               - p_k * div(psi) * dx
         
         solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
         
-        # Считаем относительное приращение
         diff = rho_k.vector() - rho_old_vec
         rel_err = diff.norm("l2") / (rho_k.vector().norm("l2") + 1e-12)
         errors.append(rel_err)
         
         if rel_err < tol and k > 0:
-            break
-            
+            break            
     return errors
-# Запуск и сравнение
-err_newton = solve_newton(rho_n, u_n, tau, tol)
-err_vabish = solve_vabishchevich(rho_n, u_n, tau, tol)
 
-# Вывод таблицы
-print(f"{'Iter':<5} | {'Newton RelErr':<15} | {'Vabish RelErr':<15}")
+start_newton = time.time()
+err_newton = solve_newton(rho_n, u_n, tau, tol)
+end_newton = time.time()
+
+start_vab = time.time()
+err_vabish = solve_vabishchevich(rho_n, u_n, tau, tol)
+end_vab = time.time()
+
+print(f"{'Iter':<5} | {'Newton':<15} | {'Vabish':<15}")
 for i in range(max(len(err_newton), len(err_vabish))):
     n_val = f"{err_newton[i]:.2e}" if i < len(err_newton) else "---"
     v_val = f"{err_vabish[i]:.2e}" if i < len(err_vabish) else "---"
     print(f"{i:<5} | {n_val:<15} | {v_val:<15}")
 
-# График
-plt.semilogy(err_newton, 'bo-', label='Newton (Full Implicit)')
-plt.semilogy(err_vabish, 'rs-', label='Vabishchevich (Splitting)')
-plt.axhline(y=tol, color='g', linestyle='--', label='Tolerance')
-plt.xlabel('Iteration'); plt.ylabel('Relative Error'); plt.legend(); plt.grid(); plt.show()
+print(f"Newton time: {end_newton - start_newton}\nVab time: {end_vab - start_vab}")
+
+# plt.semilogy(err_newton, 'bo-', label='Newton (Full Implicit)')
+# plt.semilogy(err_vabish, 'rs-', label='Vabishchevich (Splitting)')
+# plt.axhline(y=tol, color='g', linestyle='--', label='Tolerance')
+# plt.xlabel('Iteration'); plt.ylabel('Relative Error'); plt.legend(); plt.grid(); plt.show()

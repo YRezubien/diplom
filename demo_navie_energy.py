@@ -65,7 +65,7 @@ def run_energy_solver(M, tau):
         
         E_form = (E_kin + Pi_rho) * dx
         return assemble(E_form)
-    # Записываем начальную энергию
+    
     time_hist.append(t)
     energy_hist.append(compute_E(rho_n, u_n))
 
@@ -84,8 +84,8 @@ def run_energy_solver(M, tau):
                   - inner(rho_k*outer(u_trial, u_k), grad(psi))*dx \
                   - p_k*div(psi)*dx
                   
-            tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
-            F_u += inner(tau_visc, grad(psi)) * dx
+            # tau_visc = mu * (grad(u_trial) + grad(u_trial).T) - (2.0/3.0) * mu * div(u_trial) * I
+            # F_u += inner(tau_visc, grad(psi)) * dx
 
             solve(lhs(F_u) == rhs(F_u), u_k, bc_u)
 
@@ -106,7 +106,6 @@ print(f"Начинаю расчет эволюции энергии для M={M}
 for tau in taus:
     print(f"Считаю для tau = {tau}...")
     t_hist, E_hist = run_energy_solver(M, tau)
-    # Строим график с соответствующим цветом и легендой
     plt.plot(t_hist, E_hist, label=rf"$\tau = {tau}$", color=colors[tau], linewidth=1.5)
 
 plt.xlabel("$t$")
@@ -114,9 +113,7 @@ plt.ylabel("$E$")
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
-plt.savefig("Эволюция_энергии_M50.png", dpi=300)
-
-print("Готово! График сохранен как 'Эволюция_энергии_M50.png'")
+plt.savefig("Эволюция_энергии_Эйлера_M50.png", dpi=300)
 
 end_time = time.time()
 print(f"Общее время выполнения: {end_time - start_time:.2f} сек.")

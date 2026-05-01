@@ -23,16 +23,11 @@ V_u = VectorFunctionSpace(mesh, "Lagrange", 1)
 x_line = np.linspace(0, 5, 25)
 
 plt.figure(figsize=(8,5))
-
-# цветовая карта для времени
 colors = plt.cm.viridis(np.linspace(0, 1, len(times_to_plot)))
-
 used_labels = set()
 
 for tau in taus:
-    initial_density = Expression(
-        "1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2
-    )
+    initial_density = Expression("1.0 + 2.0*exp(-20*(x[0]*x[0] + x[1]*x[1]))", degree=2)
 
     rho_n = project(initial_density, V_rho)
     u_n = project(Constant((0,0)), V_u)

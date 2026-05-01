@@ -38,25 +38,21 @@ for tau in taus:
     # p_k = a * rho_k**gamma
     F_rho = ((rho_k - rho_n) / tau) * phi * dx - rho_k * dot(u_k, grad(phi)) * dx
     
-    # Уравнение импульса (Эйлер)
-    # F_u = inner((rho_k * u_k - rho_n * u_n) / tau, psi) * dx \
-    #       - inner(rho_k * outer(u_k, u_k), grad(psi)) * dx \
-    #       - p_k * div(psi) * dx
           
     c = 1.0
     p_k = c**2 * rho_k + (gamma - 1) * rho_k**gamma
 
     F_rho = ((rho_k - rho_n) / tau) * phi * dx \
             - rho_k * dot(u_k, grad(phi)) * dx
-
+    
     F_u = inner((rho_k * u_k - rho_n * u_n) / tau, psi) * dx \
           - inner(rho_k * outer(u_k, u_k), grad(psi)) * dx \
           - p_k * div(psi) * dx
 
-    tau_visc = mu * (grad(u_k) + grad(u_k).T) \
-               - (2.0 / 3.0) * mu * div(u_k) * I
+    # tau_visc = mu * (grad(u_k) + grad(u_k).T) \
+    #            - (2.0 / 3.0) * mu * div(u_k) * I
 
-    F_u += inner(tau_visc, grad(psi)) * dx
+    # F_u += inner(tau_visc, grad(psi)) * dx
 
     F = F_rho + F_u
     bc = DirichletBC(W.sub(1), Constant((0.0, 0.0)), "on_boundary")
